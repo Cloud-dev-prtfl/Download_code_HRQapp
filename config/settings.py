@@ -112,14 +112,6 @@ SESSION_COOKIE_AGE = 1800
 # Reset the timer on every request (activity) so it only expires on INACTIVITY
 SESSION_SAVE_EVERY_REQUEST = True
 
-# ZOHO MAIL API CONFIGURATION
-ZOHO_CLIENT_ID = "1000.IIFBGZS6O9ZX68YKW01REKAO994L8A"
-ZOHO_CLIENT_SECRET = "ca87657211d1ec118399f64673f7832c967aea4708"
-ZOHO_MAIL_REFRESH_TOKEN = "1000.fb768640029debfaad667efa937dbc21.7b015b4e3f205427c36c7f4b4319c30d"
-ZOHO_ACCOUNTS_DOMAIN = "https://accounts.zoho.in" 
-ZOHO_MAIL_API_DOMAIN = "mail.zoho.in"
-ZOHO_MAIL_FROM = "shubham.shirsat@integscloud.com" # Must be the verified email in Zoho
-ZOHO_MAIL_ACCOUNT_ID = "6566128000000002002"
 
 
 # PASSWORD = 'vuwrab-rogny4-tipBed'
