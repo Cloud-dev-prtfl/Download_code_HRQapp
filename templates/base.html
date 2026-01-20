@@ -1,0 +1,198 @@
+{% load static %}
+{% load auth_extras %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Django AI Project{% endblock %}</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{% static 'css/base.css' %}?v=1.2">
+    
+    {% block extra_css %}{% endblock %}
+    
+    <style>
+        /* Force full width when sidebar is hidden */
+        .app-container.full-width-mode {
+            grid-template-columns: 1fr !important;
+            padding: 0 !important;
+        }
+        /* Ensure main content takes full width */
+        .app-container.full-width-mode main {
+            width: 100%;
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container {% if user.is_authenticated and not hide_sidebar %}layout-dashboard{% else %}full-width-mode{% endif %}">
+
+        {% if user.is_authenticated and not hide_sidebar %}
+            <aside class="sidebar" id="sidebar">
+                <div class="toggle-btn" onclick="toggleSidebar()">
+                    <svg id="toggleIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </div>
+
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        {{ user.username|make_list|first|upper }}
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name">{{ user.username }}</span>
+                        <span class="user-role">
+                            {% if user.is_superuser %}Admin
+                            {% elif user|has_group:"Hr" %}HR
+                            {% else %}User{% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <nav class="sidebar-nav">
+                    
+                    {# --- CANDIDATE MENU --- #}
+                    {% if user|has_group:"User" %}
+                        
+                        <a href="{% url 'candidate_dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'candidate_dashboard' %}active{% endif %}">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                            <span class="nav-text">My Exams</span>
+                        </a>
+
+                        <a href="{% url 'candidate_history' %}" class="nav-item {% if request.resolver_match.url_name == 'candidate_history' %}active{% endif %}">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            <span class="nav-text">Exam History</span>
+                        </a>
+                    
+                    {# --- ADMIN/HR MENU --- #}
+                    {% else %}
+                        <a href="{% url 'home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                            <span class="nav-text">Dashboard</span>
+                        </a>
+
+                        <a href="{% url 'generate_exam' %}" class="nav-item {% if request.resolver_match.url_name == 'generate_exam' %}active{% endif %}">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                            <span class="nav-text">Generate Exam</span>
+                        </a>
+
+                        <a href="{% url 'previous_exams' %}" class="nav-item {% if request.resolver_match.url_name == 'previous_exams' or request.resolver_match.url_name == 'preview_exam' %}active{% endif %}">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            <span class="nav-text">Generated Exams</span>
+                        </a>
+                        
+                        <div class="nav-group">
+                            <div class="nav-item submenu-toggle" onclick="toggleSubmenu('profile-menu', this)">
+                                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                <span class="nav-text">Profile</span>
+                                <svg class="nav-arrow" width="16" height="16" style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </div>
+                            <div class="submenu {% if request.resolver_match.url_name == 'profile' %}open{% endif %}" id="profile-menu">
+                                <a href="{% url 'profile' %}#update-profile" class="nav-item sub-item" onclick="setActive(this)">
+                                    <span class="nav-text">Update Profile</span>
+                                </a>
+                                <a href="{% url 'profile' %}#reset-password" class="nav-item sub-item" onclick="setActive(this)">
+                                    <span class="nav-text">Reset Password</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <a href="{% url 'settings' %}" class="nav-item {% if request.resolver_match.url_name == 'settings' %}active{% endif %}">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                            <span class="nav-text">Settings</span>
+                        </a>
+
+                        {% if user.is_superuser or user|has_group:"Hr" %}
+                        <div style="margin: 2rem 0 0.5rem 1.5rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;" class="nav-text">
+                            Admin
+                        </div>
+                        
+                        <a href="{% url 'user_list' %}" class="nav-item {% if 'users' in request.path %}active{% endif %}">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            <span class="nav-text">User Management</span>
+                        </a>
+                        {% endif %}
+                    {% endif %}
+                </nav>
+
+                <div class="logout-section">
+                    <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="logout-btn">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                            <span class="logout-text">Logout</span>
+                        </button>
+                    </form>
+                </div>
+            </aside>
+        
+        {% elif not hide_sidebar %}
+            <header class="public-header">
+                <div class="logo" style="font-weight:700; font-size: 1.2rem;">AI Exam Generator</div>
+                <nav>
+                    {% if request.resolver_match.url_name != 'login' %}
+                        <a href="{% url 'login' %}">Login</a>
+                    {% endif %}
+                </nav>
+            </header>
+        {% endif %}
+
+        <main>
+            {% block content %}
+            {% endblock %}
+        </main>
+
+    </div>
+
+    {% if user.is_authenticated and not hide_sidebar %}
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const icon = document.getElementById('toggleIcon');
+            sidebar.classList.toggle('collapsed');
+            
+            if (sidebar.classList.contains('collapsed')) {
+                icon.innerHTML = '<polyline points="9 18 15 12 9 6"></polyline>'; 
+            } else {
+                icon.innerHTML = '<polyline points="15 18 9 12 15 6"></polyline>'; 
+            }
+        }
+
+        function toggleSubmenu(menuId, toggleElement) {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar.classList.contains('collapsed')) {
+                toggleSidebar();
+            }
+            const menu = document.getElementById(menuId);
+            menu.classList.toggle('open');
+            toggleElement.classList.toggle('open');
+        }
+
+        function setActive(element) {
+            document.querySelectorAll('.sub-item').forEach(el => el.classList.remove('active-sub'));
+            element.classList.add('active-sub');
+        }
+    </script>
+    {% endif %}
+
+</body>
+</html>

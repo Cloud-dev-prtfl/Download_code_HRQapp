@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Dashboard | AI Project{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Welcome, {{ user.first_name|default:user.username }}!</h1>
+    <p>Select an exam to begin.</p>
+</div>
+
+<div class="card" style="margin-top: 1.5rem; min-height: 300px;">
+    <h3>Available Exams</h3>
+    <p style="color: #9ca3af; margin-top: 2rem; text-align: center;">No exams assigned yet.</p>
+</div>
+{% endblock %}

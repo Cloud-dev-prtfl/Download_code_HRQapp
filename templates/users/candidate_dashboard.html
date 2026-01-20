@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Assessments | Candidate Portal{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'dashboard.css' %}">
+    <style>
+        /* --- RICH UI ENHANCEMENTS --- */
+        
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* 1. Hero Header Section */
+        .dashboard-hero {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            border-radius: 16px;
+            padding: 3rem 2.5rem;
+            color: white;
+            margin-bottom: 3rem;
+            box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* decorative circle overlay */
+        .dashboard-hero::before {
+            content: "";
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .hero-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin: 0 0 0.5rem 0;
+            letter-spacing: -0.025em;
+        }
+        .hero-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        /* 2. Grid Layout */
+        .exams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 2rem;
+        }
+
+        /* 3. Professional Exam Card */
+        .exam-card {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #f3f4f6; /* Subtle border */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .exam-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-color: #e5e7eb;
+        }
+
+        /* Difficulty Color Strip at top */
+        .card-top-strip {
+            height: 6px;
+            width: 100%;
+        }
+        /* Dynamic classes for difficulty */
+        .strip-Beginner { background: #10b981; } /* Green */
+        .strip-Medium { background: #f59e0b; }   /* Orange */
+        .strip-Advanced { background: #ef4444; } /* Red */
+
+        .card-body {
+            padding: 1.75rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .exam-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .exam-topic {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.3;
+        }
+
+        .difficulty-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            letter-spacing: 0.05em;
+        }
+        .badge-Beginner { background: #d1fae5; color: #065f46; }
+        .badge-Medium { background: #fef3c7; color: #92400e; }
+        .badge-Advanced { background: #fee2e2; color: #991b1b; }
+
+        /* Meta Data Grid */
+        .meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            padding-top: 1.5rem;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        .meta-icon-box {
+            width: 32px;
+            height: 32px;
+            background: #f9fafb;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4f46e5;
+        }
+
+        .card-footer {
+            margin-top: auto;
+        }
+
+        .start-btn {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+            background-color: #4f46e5;
+            color: white;
+            padding: 0.875rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+        }
+        .start-btn:hover {
+            background-color: #4338ca;
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4);
+        }
+
+        /* Empty State Styling */
+        .empty-state {
+            text-align: center;
+            padding: 5rem 2rem;
+            background: white;
+            border-radius: 20px;
+            border: 2px dashed #e5e7eb;
+            margin-top: 2rem;
+        }
+        .empty-illustration {
+            width: 80px;
+            height: 80px;
+            background: #f3f4f6;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            color: #9ca3af;
+            font-size: 2rem;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    
+    <div class="dashboard-hero">
+        <h1 class="hero-title">Welcome back, {{ user.first_name|default:user.username }}!</h1>
+        <p class="hero-subtitle">
+            You have <strong>{{ assignments|length }}</strong> pending assessments. 
+            Select an exam card below to demonstrate your technical expertise.
+        </p>
+    </div>
+
+    {% if assignments %}
+        <div class="exams-grid">
+            {% for assignment in assignments %}
+                <div class="exam-card">
+                    <div class="card-top-strip strip-{{ assignment.exam.difficulty_level }}"></div>
+                    
+                    <div class="card-body">
+                        <div class="exam-header">
+                            <div class="exam-topic">
+                                {{ assignment.exam.coding_languages|default:"General Tech Assessment" }}
+                            </div>
+                            <span class="difficulty-badge badge-{{ assignment.exam.difficulty_level }}">
+                                {{ assignment.exam.difficulty_level }}
+                            </span>
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <span style="font-size: 0.85rem; color: #6b7280; font-weight: 600; background: #f3f4f6; padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                {{ assignment.calculated_duration }} Minutes
+                            </span>
+                        </div>
+                        
+                        <div style="font-size: 0.9rem; color: #6b7280; line-height: 1.5;">
+                            {{ assignment.exam.specific_instructions|truncatechars:80|default:"Comprehensive technical evaluation designed to test core competencies." }}
+                        </div>
+
+                        <div class="meta-grid">
+                            <div class="meta-item">
+                                <div class="meta-icon-box">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Assigned</div>
+                                    {{ assignment.assigned_at|date:"M d" }}
+                                </div>
+                            </div>
+                            
+                            <div class="meta-item">
+                                <div class="meta-icon-box">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Questions</div>
+                                    {{ assignment.exam.num_questions }} Items
+                                </div>
+                            </div>
+
+                            <div class="meta-item">
+                                <div class="meta-icon-box">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Format</div>
+                                    {% if assignment.exam.mcq_format %}MCQ{% else %}Subjective{% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="meta-item">
+                                <div class="meta-icon-box">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Level</div>
+                                    {{ assignment.exam.experience_level }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-footer">
+                            <a href="{% url 'take_exam' assignment.id %}" class="start-btn">
+                                <span>Start Assessment</span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-illustration">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+            </div>
+            <h3 style="font-size: 1.5rem; font-weight: 700; color: #1f2937; margin: 0 0 0.5rem 0;">All Caught Up!</h3>
+            <p style="color: #6b7280; max-width: 400px; margin: 0 auto;">
+                You don't have any pending exams at the moment. Check back later or contact your administrator.
+            </p>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Result: {{ assignment.exam.coding_languages }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .result-container { max-width: 900px; margin: 3rem auto; padding: 0 1.5rem; }
+    
+    .score-card {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        color: white; padding: 2.5rem; border-radius: 16px; text-align: center;
+        margin-bottom: 3rem; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+    }
+    .big-score { font-size: 4rem; font-weight: 800; line-height: 1; margin: 1rem 0; }
+    
+    .q-result-card {
+        background: white; border: 1px solid #e5e7eb; border-radius: 12px;
+        padding: 1.5rem; margin-bottom: 1.5rem; position: relative;
+        overflow: hidden;
+    }
+    .q-result-card.correct { border-left: 5px solid #10b981; }
+    .q-result-card.incorrect { border-left: 5px solid #ef4444; }
+    
+    .q-text { font-size: 1.1rem; font-weight: 600; color: #1f2937; margin-bottom: 1rem; }
+    
+    .ans-box { padding: 0.75rem; border-radius: 6px; margin-top: 0.5rem; font-size: 0.95rem; }
+    .ans-user { background: #f3f4f6; color: #374151; }
+    .ans-user span { font-weight: 700; color: #6b7280; font-size: 0.8rem; text-transform: uppercase; }
+    
+    .ans-correct { background: #d1fae5; color: #065f46; margin-top: 0.5rem; }
+    .ans-correct span { font-weight: 700; color: #047857; font-size: 0.8rem; text-transform: uppercase; }
+
+    .status-badge {
+        position: absolute; top: 1rem; right: 1rem; 
+        font-size: 0.8rem; font-weight: 700; padding: 0.25rem 0.5rem; border-radius: 4px;
+    }
+    .st-correct { background: #d1fae5; color: #065f46; }
+    .st-incorrect { background: #fee2e2; color: #b91c1c; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="result-container">
+    <a href="{% url 'candidate_history' %}" style="display:block; margin-bottom:1rem; color:#6b7280; text-decoration:none;">← Back to History</a>
+
+    <div class="score-card">
+        <h2 style="margin:0; opacity:0.9;">{{ assignment.exam.coding_languages }}</h2>
+        <div class="big-score">{{ assignment.score }}%</div>
+        <p style="margin:0; opacity:0.8;">Final Score</p>
+    </div>
+
+    <h3 style="margin-bottom: 1.5rem; color: #374151;">Detailed Report</h3>
+
+    {% for q in detailed_questions %}
+    <div class="q-result-card {% if q.is_correct %}correct{% else %}incorrect{% endif %}">
+        
+        {% if q.is_correct %}
+            <div class="status-badge st-correct">CORRECT</div>
+        {% else %}
+            <div class="status-badge st-incorrect">INCORRECT</div>
+        {% endif %}
+
+        <div class="q-text">{{ forloop.counter }}. {{ q.q_text }}</div>
+
+        <div class="ans-box ans-user">
+            <span>Your Answer:</span><br>
+            {{ q.user_answer }}
+        </div>
+
+        {% if not q.is_correct %}
+        <div class="ans-box ans-correct">
+            <span>Correct Answer:</span><br>
+            {{ q.correct_answer }}
+        </div>
+        {% endif %}
+
+        {% if q.explanation %}
+        <div style="margin-top: 1rem; font-size: 0.9rem; color: #6b7280; font-style: italic;">
+            <strong>Explanation:</strong> {{ q.explanation }}
+        </div>
+        {% endif %}
+
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

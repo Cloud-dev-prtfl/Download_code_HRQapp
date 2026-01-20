@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Exam Settings | AI Exam Generator{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/settings.css' %}?v=3.6">
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <div class="profile-header">
+        <h1>Exam Configuration</h1>
+        <p style="color: var(--text-medium); margin-top: 0.75rem; font-size: 1.1rem;">Define the parameters for your AI-generated assessment.</p>
+    </div>
+
+    <div id="error-message" style="display: none; background-color: #fef2f2; color: #991b1b; padding: 1rem; border-radius: 8px; border: 1px solid #fecaca; margin-bottom: 2rem;">
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div style="padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; background-color: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0;">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form id="examSettingsForm" method="POST" action="{% url 'settings' %}">
+        {% csrf_token %}
+        
+        <div class="settings-section">
+            <h3 class="section-title">Candidate Profile</h3>
+            
+            <div class="input-wrapper" style="margin-bottom: 2.5rem;">
+                <label class="input-label">Difficulty Level <span style="color: #ef4444;">*</span></label>
+                <div class="selection-grid" id="level-container">
+                    <div class="selectable-box" data-value="Beginner" onclick="selectBox(this, 'level')">
+                        <span style="font-size: 1.5rem; margin-bottom: 0.5rem;">🌱</span>
+                        Beginner
+                    </div>
+                    <div class="selectable-box" data-value="Medium" onclick="selectBox(this, 'level')">
+                        <span style="font-size: 1.5rem; margin-bottom: 0.5rem;">🌿</span>
+                        Medium
+                    </div>
+                    <div class="selectable-box" data-value="Advanced" onclick="selectBox(this, 'level')">
+                        <span style="font-size: 1.5rem; margin-bottom: 0.5rem;">🌳</span>
+                        Advanced
+                    </div>
+                </div>
+                <input type="hidden" name="level" id="input-level" value="{{ last_exam.difficulty_level|default:'' }}">
+            </div>
+
+            <div class="input-wrapper">
+                <label class="input-label">Experience Level <span style="color: #ef4444;">*</span></label>
+                <div class="selection-grid" id="experience-container">
+                    <div class="selectable-box" data-value="Fresher / < 1 Year" onclick="selectBox(this, 'exp')">Fresher / < 1 Year</div>
+                    <div class="selectable-box" data-value="1 - 3 Years" onclick="selectBox(this, 'exp')">1 - 3 Years</div>
+                    <div class="selectable-box" data-value="4 - 5 Years" onclick="selectBox(this, 'exp')">4 - 5 Years</div>
+                    <div class="selectable-box" data-value="Above 5 Years" onclick="selectBox(this, 'exp')">Above 5 Years</div>
+                </div>
+                <input type="hidden" name="experience" id="input-exp" value="{{ last_exam.experience_level|default:'' }}">
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3 class="section-title">Exam Structure</h3>
+
+            <div class="input-wrapper">
+                <label class="input-label">Number of Questions (Max 100) <span style="color: #ef4444;">*</span></label>
+                <input type="number" id="input-questions" class="settings-input" name="num_questions" min="1" max="100" placeholder="e.g. 20" style="max-width: 200px;" value="{{ last_exam.num_questions|default:'' }}">
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <div class="toggle-wrapper">
+                    <span class="toggle-label">Repeated Questions Allowed?</span>
+                    <label class="switch">
+                        <input type="checkbox" name="repeated_allowed" {% if last_exam.repeated_questions_allowed %}checked{% endif %}>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                </div>
+        </div>
+
+        <div class="settings-section">
+            <h3 class="section-title">Content Scope</h3>
+
+            <div class="toggle-wrapper" style="margin-bottom: 2rem; background-color: #f0f9ff; border-color: #bae6fd;">
+                <span class="toggle-label" style="color: #0369a1;">General Topic? (Locks Languages below)</span>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-general" name="general_topic" onchange="handleGeneralTopicChange()" {% if last_exam.general_topic %}checked{% endif %}>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="input-wrapper">
+                <label class="input-label" id="label-languages">Coding Languages (Select Multiple) <span id="lang-asterisk" style="color: #ef4444;">*</span></label>
+                <div class="multi-select-container" id="lang-container">
+                    <div class="tech-tag" onclick="toggleTag(this)">Celigo</div>
+                    <div class="tech-tag" onclick="toggleTag(this)">NetSuite Functional</div>
+                    
+                    <div class="tech-tag" onclick="toggleTag(this)">Zoho Deluge</div>
+                    <div class="tech-tag" onclick="toggleTag(this)">Zoho CRM</div>
+                    <div class="tech-tag" onclick="toggleTag(this)">NetSuite Suitescript 2.0</div>
+                    <div class="tech-tag" onclick="toggleTag(this)">NetSuite Suitescript 1.0</div>
+                    
+                    <div class="tech-tag" onclick="toggleTag(this)">Python</div>
+                    <div class="tech-tag" onclick="toggleTag(this)">JavaScript</div>
+                    <div class="tech-tag" onclick="toggleTag(this)">Java</div>
+                    <div class="tech-tag" onclick="toggleTag(this)">C++</div>
+                    <div class="tech-tag" onclick="toggleTag(this)">C#</div>
+                    <div class="tech-tag" onclick="toggleTag(this)">Go</div>
+                    <div class="tech-tag" onclick="toggleTag(this)">Ruby</div>
+                </div>
+                <input type="hidden" name="languages" id="input-languages" value="{{ last_exam.coding_languages|default:'' }}">
+            </div>
+
+            <div class="input-wrapper" style="margin-top: 2rem;">
+                <label class="input-label">Any Specific Instructions</label>
+                <textarea class="settings-input" name="instructions" rows="5" placeholder="Enter specific instructions...">{{ last_exam.specific_instructions|default:'' }}</textarea>
+            </div>
+        </div>
+
+        <div style="text-align: right; margin-bottom: 4rem; margin-top: 3rem;">
+            <button type="button" onclick="validateAndSubmit()" class="submit-btn" style="padding: 1.25rem 3rem; font-size: 1.1rem;">Save Exam Configuration</button>
+        </div>
+
+    </form>
+</div>
+
+<script>
+    /* --- INITIALIZATION LOGIC (PRE-FILL FORM) --- */
+    document.addEventListener("DOMContentLoaded", function() {
+        const savedLevel = "{{ last_exam.difficulty_level|default:''|escapejs }}";
+        if (savedLevel) {
+            const levelContainer = document.getElementById('level-container');
+            const boxes = levelContainer.getElementsByClassName('selectable-box');
+            Array.from(boxes).forEach(box => {
+                if (box.dataset.value === savedLevel) {
+                    box.classList.add('selected');
+                } else {
+                    box.classList.add('blurred');
+                }
+            });
+        }
+
+        const savedExp = "{{ last_exam.experience_level|default:''|escapejs }}";
+        if (savedExp) {
+            const expContainer = document.getElementById('experience-container');
+            const boxes = expContainer.getElementsByClassName('selectable-box');
+            Array.from(boxes).forEach(box => {
+                if (box.dataset.value === savedExp) {
+                    box.classList.add('selected');
+                } else {
+                    box.classList.add('blurred');
+                }
+            });
+        }
+
+        const savedLangs = "{{ last_exam.coding_languages|default:''|escapejs }}";
+        const isGeneral = document.getElementById('toggle-general').checked;
+        
+        if (savedLangs && !isGeneral) {
+            const langArray = savedLangs.split(',');
+            const langContainer = document.getElementById('lang-container');
+            const tags = langContainer.getElementsByClassName('tech-tag');
+            
+            Array.from(tags).forEach(tag => {
+                if (langArray.includes(tag.innerText.trim())) {
+                    tag.classList.add('active');
+                }
+            });
+        }
+
+        if (isGeneral) {
+            handleGeneralTopicChange(); 
+        }
+    });
+
+    /* --- VALIDATION LOGIC --- */
+    function validateAndSubmit() {
+        const errorContainer = document.getElementById('error-message');
+        errorContainer.style.display = 'none';
+        errorContainer.innerText = '';
+        let errors = [];
+
+        const level = document.getElementById('input-level').value;
+        if (!level) errors.push("Please select a Difficulty Level.");
+
+        const experience = document.getElementById('input-exp').value;
+        if (!experience) errors.push("Please select an Experience Level.");
+
+        const questions = document.getElementById('input-questions').value;
+        if (!questions) {
+            errors.push("Please enter the number of questions.");
+        } else if (questions < 1 || questions > 100) {
+            errors.push("Number of questions must be between 1 and 100.");
+        }
+
+        const isGeneralTopic = document.getElementById('toggle-general').checked;
+        if (!isGeneralTopic) {
+            const activeTags = document.querySelectorAll('#lang-container .tech-tag.active');
+            if (activeTags.length === 0) {
+                errors.push("Please select at least one Coding Language OR enable 'General Topic'.");
+            } else {
+                const selectedLangs = Array.from(activeTags).map(tag => tag.innerText.trim()).join(',');
+                document.getElementById('input-languages').value = selectedLangs;
+            }
+        } else {
+            document.getElementById('input-languages').value = "General";
+        }
+
+        if (errors.length > 0) {
+            errorContainer.innerHTML = "<strong>Please fix the following errors:</strong><ul style='margin-top:0.5rem; padding-left:1.5rem;'>" + errors.map(e => `<li>${e}</li>`).join('') + "</ul>";
+            errorContainer.style.display = 'block';
+            window.scrollTo(0, 0); 
+        } else {
+            document.getElementById('examSettingsForm').submit();
+        }
+    }
+
+    /* --- UI INTERACTION LOGIC --- */
+    function selectBox(element, groupName) {
+        const container = element.parentElement;
+        const input = document.getElementById('input-' + groupName);
+        const boxes = container.getElementsByClassName('selectable-box');
+
+        if (element.classList.contains('selected')) {
+            element.classList.remove('selected');
+            input.value = "";
+            Array.from(boxes).forEach(box => box.classList.remove('blurred'));
+            return;
+        }
+
+        Array.from(boxes).forEach(box => {
+            if (box === element) {
+                box.classList.add('selected');
+                box.classList.remove('blurred');
+                input.value = box.dataset.value;
+            } else {
+                box.classList.remove('selected');
+                box.classList.add('blurred');
+            }
+        });
+    }
+
+    function toggleTag(element) {
+        if (element.parentElement.classList.contains('locked')) return;
+        element.classList.toggle('active');
+    }
+
+    function handleGeneralTopicChange() {
+        const generalToggle = document.getElementById('toggle-general');
+        const langContainer = document.getElementById('lang-container');
+        const asterisk = document.getElementById('lang-asterisk');
+        
+        if (generalToggle.checked) {
+            langContainer.classList.add('locked');
+            asterisk.style.display = 'none';
+            const tags = langContainer.getElementsByClassName('tech-tag');
+            Array.from(tags).forEach(tag => tag.classList.remove('active'));
+        } else {
+            langContainer.classList.remove('locked');
+            asterisk.style.display = 'inline';
+        }
+    }
+</script>
+{% endblock %}

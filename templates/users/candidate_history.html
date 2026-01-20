@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Exam History - Candidate Portal{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'dashboard.css' %}">
+    <style>
+        .history-container {
+            padding: 1rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        .page-header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        /* Table Styles */
+        .history-table-wrapper {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden; /* For rounded corners on table */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .history-table thead {
+            background-color: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .history-table th {
+            padding: 1rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .history-table tbody tr {
+            border-bottom: 1px solid #f3f4f6;
+            transition: background-color 0.2s;
+        }
+        .history-table tbody tr:last-child {
+            border-bottom: none;
+        }
+        .history-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .history-table td {
+            padding: 1rem 1.5rem;
+            font-size: 0.95rem;
+            color: #374151;
+            vertical-align: middle;
+        }
+
+        /* Status Badge */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-success {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        /* Score Styling */
+        .score-display {
+            font-weight: 700;
+            color: #111827;
+        }
+        .score-display.pass { color: #059669; }
+        .score-display.fail { color: #dc2626; }
+
+        /* Action Button */
+        .btn-view {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background-color: white;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn-view:hover {
+            background-color: #f3f4f6;
+            border-color: #9ca3af;
+            color: #111827;
+        }
+
+        /* Empty State */
+        .empty-history {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6b7280;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="history-container">
+    
+    <div class="page-header">
+        <h1>Exam History</h1>
+        <p style="color: #6b7280;">Review your past performance and results.</p>
+    </div>
+
+    {% if assignments %}
+    <div class="history-table-wrapper">
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Exam Topic</th>
+                    <th>Date Taken</th>
+                    <th>Difficulty</th>
+                    <th>Score</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for assignment in assignments %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 600; color: #111827;">
+                            {{ assignment.exam.coding_languages|default:"General Assessment" }}
+                        </div>
+                        <div style="font-size: 0.8rem; color: #9ca3af;">
+                            {{ assignment.exam.experience_level }} Experience
+                        </div>
+                    </td>
+                    <td>
+                        {{ assignment.assigned_at|date:"M d, Y" }}
+                    </td>
+                    <td>
+                        {{ assignment.exam.difficulty_level }}
+                    </td>
+                    <td>
+                        <span class="score-display {% if assignment.score >= 70 %}pass{% else %}fail{% endif %}">
+                            {{ assignment.score }}%
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge badge-success">Completed</span>
+                    </td>
+                    <td>
+                        <a href="{% url 'exam_result' assignment.id %}" class="btn-view">
+                            <i class="fa-solid fa-eye"></i> View Result
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="history-table-wrapper empty-history">
+        <i class="fa-solid fa-clock-rotate-left" style="font-size: 3rem; color: #d1d5db; margin-bottom: 1rem;"></i>
+        <h3>No Exam History</h3>
+        <p>You haven't completed any exams yet.</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

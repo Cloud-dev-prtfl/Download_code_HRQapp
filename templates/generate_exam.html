@@ -1,0 +1,452 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Generate & Assign Exam{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Full width layout since sidebar is removed */
+    .dashboard-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    /* MAIN BUTTONS */
+    .exam-header-btn {
+        width: 100%;
+        min-height: 160px;
+        padding: 2rem 3rem;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        border-radius: 20px;
+        box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4);
+        color: white;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border: none;
+        cursor: pointer;
+        text-align: left;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .exam-header-btn:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 30px -10px rgba(79, 70, 229, 0.5);
+    }
+
+    /* Cancel Button */
+    .cancel-btn {
+        background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+        box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.4);
+        display: none; /* Hidden by default */
+    }
+    .cancel-btn:hover {
+        box-shadow: 0 20px 30px -10px rgba(239, 68, 68, 0.5);
+    }
+    
+    /* Locked State for Generate Button */
+    .locked { 
+        opacity: 0.7; 
+        pointer-events: none; 
+        filter: grayscale(0.4); 
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    .header-content { flex: 1; padding-right: 1rem; }
+    .header-title { font-size: 2.2rem; font-weight: 800; margin: 0; line-height: 1.1; }
+    .header-subtitle { font-size: 1.1rem; margin-top: 0.75rem; opacity: 0.95; font-weight: 400; }
+    .header-icon { font-size: 4.5rem; opacity: 0.25; transform: rotate(10deg); }
+
+    /* --- FUTURISTIC PROGRESS BAR --- */
+    #progress-interface {
+        display: none; /* Hidden by default */
+        margin-bottom: 1.5rem; /* Spacing before Cancel button */
+        animation: slideDown 0.4s ease-out;
+        text-align: center;
+    }
+
+    .quantum-track {
+        height: 16px;
+        background: #e5e7eb;
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        text-align: left; /* Reset text align for bar */
+    }
+
+    .quantum-bar {
+        height: 100%;
+        width: 0%;
+        /* Glowing Gradient */
+        background: linear-gradient(90deg, #4f46e5, #06b6d4, #8b5cf6, #4f46e5);
+        background-size: 200% 100%;
+        border-radius: 8px;
+        transition: width 0.3s ease-out;
+        animation: quantum-flow 1.5s linear infinite;
+        position: relative;
+    }
+
+    /* Glow Effect */
+    .quantum-bar::after {
+        content: '';
+        position: absolute;
+        top: 0; right: 0; bottom: 0;
+        width: 5px;
+        background: white;
+        box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.8);
+        opacity: 0.7;
+    }
+
+    .status-readout {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.75rem;
+        font-family: 'Courier New', Courier, monospace; /* Tech font */
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #4f46e5;
+        text-align: left;
+    }
+
+    .status-percentage { color: #6b7280; }
+
+    /* --- TECH VIDEO CONTAINER --- */
+    .tech-video-wrapper {
+        margin-top: 1.5rem;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        border: 2px solid #e0e7ff;
+        position: relative;
+        /* UPDATED: Increased max-width from 400px to 750px for larger video */
+        max-width: 750px; 
+        width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Scanline Overlay Effect */
+    .tech-video-wrapper::after {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+        background-size: 100% 4px;
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    .tech-video {
+        width: 100%;
+        height: auto;
+        display: block;
+        opacity: 0.95; /* Increased opacity slightly for visibility */
+    }
+
+    @keyframes quantum-flow { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    /* ------------------------------------ */
+
+    /* EXAM CONTENT */
+    #exam-header-container { text-align: center; margin: 2rem 0; animation: fadeIn 0.5s; }
+    .exam-title-text { font-size: 2rem; font-weight: 800; color: #111827; }
+    .exam-summary-text { font-size: 1.1rem; color: #4b5563; max-width: 800px; margin: 0.5rem auto; }
+
+    #exam-questions-container {
+        background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 4rem;
+        max-height: 800px; overflow-y: auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: none; counter-reset: q-counter;
+    }
+    .question-item { margin-bottom: 3rem; position: relative; padding-left: 2.5rem; }
+    .question-item::before {
+        counter-increment: q-counter; content: "Q" counter(q-counter) ".";
+        position: absolute; left: 0; top: 0; font-weight: 800; color: #4f46e5; font-size: 1.1rem;
+    }
+    .q-text { font-size: 1.1rem; font-weight: 600; color: #1f2937; margin-bottom: 1rem; }
+    .opt { padding: 0.75rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 0.5rem; background: #f8fafc; color: #334155; }
+
+    /* MODAL */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+    .modal-content { background: white; padding: 2.5rem; border-radius: 16px; width: 100%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+    .assign-btn { width: 100%; padding: 1rem; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 1rem; margin-top: 2rem; cursor: pointer; transition: background 0.2s; display: none; }
+    .assign-btn:hover { background: #059669; }
+    .custom-msg-box { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-family: inherit; font-size: 0.95rem; resize: vertical; margin-bottom: 1.5rem; }
+
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+
+    <button id="btn-generate" class="exam-header-btn" onclick="startGeneration()">
+        <div class="header-content">
+            <h1 class="header-title">Generate Exam</h1>
+            <p class="header-subtitle" id="subtitle-text">Click to start creating a new AI assessment based on your settings.</p>
+        </div>
+        <div class="header-icon" id="header-icon">✨</div>
+    </button>
+
+    <div id="progress-interface">
+        <div class="quantum-track">
+            <div id="tech-progress" class="quantum-bar"></div>
+        </div>
+        <div class="status-readout">
+            <span id="tech-status-text">INITIALIZING AI CORE...</span>
+            <span id="tech-percentage" class="status-percentage">0%</span>
+        </div>
+
+        <div class="tech-video-wrapper">
+            <video id="generation-video" class="tech-video" muted loop playsinline>
+                <source src="{% static 'video/video2.mp4' %}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+    </div>
+
+    <button id="btn-cancel" class="exam-header-btn cancel-btn" onclick="cancelGeneration()">
+        <div class="header-content">
+            <h1 class="header-title">🛑 Cancel Generation</h1>
+            <p class="header-subtitle">Stop the AI agent immediately.</p>
+        </div>
+        <div class="header-icon">🚫</div>
+    </button>
+
+    <div id="exam-header-container"></div>
+    <div id="exam-questions-container"></div>
+    
+    <button id="btn-assign" class="assign-btn" onclick="openAssignModal()">📝 Assign This Exam to User</button>
+
+</div>
+
+<div id="assign-modal" class="modal-overlay">
+    <div class="modal-content">
+        <h2 style="font-size: 1.5rem; font-weight: 800; color: #111827; margin-bottom: 1.5rem;">Assign Exam</h2>
+        <label style="display:block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">Select Candidate</label>
+        <select id="assign-user" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; margin-bottom: 1.5rem; font-size: 1rem;">
+            {% for user in candidates %}
+            <option value="{{ user.id }}">{{ user.username }} ({{ user.email }})</option>
+            {% endfor %}
+        </select>
+        <label style="display:block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">Temp Password / Note</label>
+        <textarea id="assign-message" class="custom-msg-box" rows="4" placeholder="Hello, here is your temporary password: ..."></textarea>
+        <div style="display: flex; gap: 1rem;">
+            <button onclick="closeAssignModal()" style="flex:1; padding: 0.75rem; background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancel</button>
+            <button onclick="sendAssignment()" style="flex:1; padding: 0.75rem; background: #4f46e5; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Confirm & Send</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentSessionId = null;
+    let pollInterval = null;
+    
+    // Animation Variables
+    let visualProgress = 0;
+    let visualInterval = null;
+    const ESTIMATED_DURATION = 20000; 
+    
+    const loadingMessages = [
+        "INITIALIZING NEURAL CORE...",
+        "ANALYZING PARAMETERS...",
+        "SYNTHESIZING QUESTIONS...",
+        "VALIDATING LOGIC...",
+        "FINALIZING OUTPUT..."
+    ];
+
+    // Reference to Video
+    const techVideo = document.getElementById('generation-video');
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const activeId = "{{ active_session_id|default:'' }}";
+        if (activeId) { 
+            currentSessionId = activeId; 
+            restoreLoadingState(); 
+            pollInterval = setInterval(checkStatus, 2000); 
+        }
+    });
+
+    function startGeneration() {
+        localStorage.setItem('exam_start_time', Date.now());
+        
+        setLoading(true);
+        document.getElementById('exam-header-container').innerHTML = '';
+        document.getElementById('exam-questions-container').innerHTML = '';
+        document.getElementById('exam-questions-container').style.display = 'none';
+        document.getElementById('btn-assign').style.display = 'none';
+
+        fetch("{% url 'start_exam_api' %}", { method: "POST", headers: {"X-CSRFToken": "{{ csrf_token }}"} })
+        .then(res => res.json())
+        .then(data => { 
+            if(data.status === 'started') { 
+                currentSessionId = data.session_id; 
+                pollInterval = setInterval(checkStatus, 2000); 
+            } else { 
+                alert(data.message); 
+                setLoading(false); 
+            } 
+        })
+        .catch(() => setLoading(false));
+    }
+
+    function cancelGeneration() {
+        if(!currentSessionId) return;
+        const formData = new FormData(); formData.append('session_id', currentSessionId);
+        fetch("{% url 'cancel_exam_api' %}", { method: "POST", body: formData, headers: {"X-CSRFToken": "{{ csrf_token }}"} })
+        .then(() => { 
+            setLoading(false); 
+            document.getElementById('subtitle-text').innerText = "Generation Cancelled."; 
+            localStorage.removeItem('exam_start_time');
+        });
+    }
+
+    function checkStatus() {
+        if(!currentSessionId) return;
+        fetch(`{% url 'check_exam_status' %}?session_id=${currentSessionId}`)
+        .then(res => res.json())
+        .then(data => { 
+            if (data.status === 'COMPLETED') { 
+                finishProgress(() => {
+                    displayExam(data.html); 
+                    setLoading(false, true);
+                    localStorage.removeItem('exam_start_time');
+                });
+            } else if (data.status === 'FAILED') { 
+                setLoading(false); 
+                alert("Generation Failed."); 
+                localStorage.removeItem('exam_start_time');
+            } 
+        });
+    }
+
+    function displayExam(htmlString) {
+        if(!htmlString) return;
+        try {
+            const data = JSON.parse(htmlString);
+            document.getElementById('exam-header-container').innerHTML = data.header_html;
+            document.getElementById('exam-questions-container').innerHTML = data.questions_html;
+            document.getElementById('exam-questions-container').style.display = 'block';
+            document.getElementById('btn-assign').style.display = 'block';
+        } catch(e) { console.error(e); }
+    }
+
+    // --- UI LOGIC ---
+
+    function setLoading(isLoading, isSuccess=false) {
+        const genBtn = document.getElementById('btn-generate');
+        const icon = document.getElementById('header-icon');
+        const cancelBtn = document.getElementById('btn-cancel');
+        const subText = document.getElementById('subtitle-text');
+        const progressUI = document.getElementById('progress-interface');
+
+        if(isLoading) {
+            // LOCK Generate Button
+            genBtn.classList.add('locked');
+            icon.innerText = "⚙️"; 
+            icon.style.animation = "spin 2s linear infinite";
+            subText.innerText = "Agent is working..."; 
+            
+            // Show Progress & Cancel
+            progressUI.style.display = 'block';
+            cancelBtn.style.display = 'flex';
+            
+            startVisualProgress();
+            
+            // START VIDEO
+            if(techVideo) techVideo.play().catch(e => console.log("Auto-play prevented:", e));
+
+        } else {
+            if(pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+            
+            // UNLOCK Generate Button
+            genBtn.classList.remove('locked');
+            icon.style.animation = "none";
+            
+            // Hide Progress & Cancel
+            progressUI.style.display = 'none';
+            cancelBtn.style.display = 'none';
+            stopVisualProgress();
+            
+            // STOP VIDEO
+            if(techVideo) {
+                techVideo.pause();
+                techVideo.currentTime = 0; // Reset
+            }
+
+            if(isSuccess) { icon.innerText = "✅"; subText.innerText = "Exam Ready!"; } 
+            else { icon.innerText = "✨"; subText.innerText = "Click to start."; }
+        }
+    }
+
+    // --- PROGRESS PERSISTENCE & ANIMATION ---
+
+    function restoreLoadingState() {
+        const startTime = localStorage.getItem('exam_start_time');
+        if (startTime) {
+            const elapsed = Date.now() - parseInt(startTime);
+            let startPerc = (elapsed / ESTIMATED_DURATION) * 90; 
+            if (startPerc > 90) startPerc = 90;
+            visualProgress = startPerc;
+        }
+        setLoading(true);
+    }
+
+    function startVisualProgress() {
+        const bar = document.getElementById('tech-progress');
+        const statusTxt = document.getElementById('tech-status-text');
+        const percTxt = document.getElementById('tech-percentage');
+        
+        if(visualInterval) clearInterval(visualInterval);
+
+        visualInterval = setInterval(() => {
+            if(visualProgress < 90) {
+                visualProgress += (Math.random() * 0.5); 
+                bar.style.width = visualProgress + "%";
+                percTxt.innerText = Math.floor(visualProgress) + "%";
+
+                const msgIndex = Math.floor((visualProgress / 90) * loadingMessages.length);
+                if(loadingMessages[msgIndex]) statusTxt.innerText = loadingMessages[msgIndex];
+            }
+        }, 100);
+    }
+
+    function finishProgress(callback) {
+        if(visualInterval) clearInterval(visualInterval);
+        
+        const bar = document.getElementById('tech-progress');
+        const statusTxt = document.getElementById('tech-status-text');
+        const percTxt = document.getElementById('tech-percentage');
+        
+        bar.style.width = "100%";
+        percTxt.innerText = "100%";
+        statusTxt.innerText = "GENERATION COMPLETE";
+        
+        setTimeout(() => {
+            callback();
+        }, 500);
+    }
+
+    function stopVisualProgress() {
+        if(visualInterval) clearInterval(visualInterval);
+    }
+
+    // --- ASSIGNMENT LOGIC ---
+    function openAssignModal() { document.getElementById('assign-modal').style.display = 'flex'; }
+    function closeAssignModal() { document.getElementById('assign-modal').style.display = 'none'; }
+    
+    function sendAssignment() {
+        const userId = document.getElementById('assign-user').value;
+        const message = document.getElementById('assign-message').value;
+        if(!currentSessionId) return alert("No exam selected!");
+        const formData = new FormData(); formData.append('exam_id', currentSessionId); formData.append('user_id', userId); formData.append('message', message);
+        fetch("{% url 'assign_exam_api' %}", { method: "POST", body: formData, headers: {"X-CSRFToken": "{{ csrf_token }}"} })
+        .then(res => res.json()).then(data => { alert(data.message); closeAssignModal(); });
+    }
+</script>
+{% endblock %}
